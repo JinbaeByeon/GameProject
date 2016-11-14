@@ -2,7 +2,7 @@ import game_framework
 from pico2d import *
 
 
-import title_state
+import isaac
 
 name = "StartState"
 image = None
@@ -23,7 +23,7 @@ def update(frame_time):
 
     if (logo_time > 0.2):
         logo_time = 0
-        game_framework.push_state(title_state)
+        game_framework.push_state(isaac)
         #game_framework.quit()
     logo_time += frame_time
 
