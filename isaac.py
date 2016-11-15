@@ -7,7 +7,8 @@ from pico2d import *
 import game_framework
 
 from bullet import Bullet
-
+from map import Map
+from item import Item
 
 name = "MainState"
 
@@ -16,11 +17,9 @@ map =None
 font = None
 
 
-
-
-
-
 class Isaac:
+    global map,items
+
     PIXEL_PER_METER = (10.0 / 0.3)           # 10 pixel 30 cm
     RUN_SPEED_KMPH = 20.0                    # Km / Hour
     RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
@@ -31,7 +30,7 @@ class Isaac:
     ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
     FRAMES_PER_ACTION = 10
 
-    PLAYER_SIZE = 60
+    PLAYER_SIZE = 50
 
     head = None
     body = None
@@ -42,6 +41,7 @@ class Isaac:
 
     def __init__(self):
         self.x, self.y = 400, 300
+        self.hp = 3
         self.shot_speed =3
         self.head_frame = 0
         self.head_total_frames = 0.0
@@ -52,6 +52,7 @@ class Isaac:
         self.head_state = self.NOT_SHOT
         self.body_state = self.NOT_MOVE
         self.shot_Enable = True
+        self.gauge = 0.0
 
         self.bullets = [Bullet() for i in range(8)]
         self.current = 0
@@ -88,11 +89,11 @@ class Isaac:
                     self.bullets[self.current].dir_Y = 1
                 if self.head_state == self.HEAD_DOWN:
                     self.bullets[self.current].dir_Y = -1
+                self.current = (self.current +1)%8
                 self.shot_Enable = False
 
             elif self.head_frame%2 == 0:
                 self.shot_Enable = True
-            self.current = (self.current +1)%8
         else:
             self.head_frame = 0
 
@@ -106,6 +107,45 @@ class Isaac:
         self.x += self.dir_X*distance
         self.y += self.dir_Y*distance
 
+        self.collision()
+
+    def collision(self):
+        if collide(self,map):
+            if self.x-self.PLAYER_SIZE/2+10 < map.left:
+                self.x = map.left + self.PLAYER_SIZE/2-10
+            if self.x+self.PLAYER_SIZE/2-10 > map.right:
+                self.x = map.right - self.PLAYER_SIZE/2+10
+            if self.y-self.PLAYER_SIZE/2 < map.bottom:
+                self.y = map.bottom + self.PLAYER_SIZE/2
+            if self.y > map.top:
+                self.y = map.top
+
+        if collide(self,items[map.stage]) and map.state == 'TOP_ROOM':
+            items[map.stage].on_Item = False
+
+            # 상태변화
+
+
+            if self.dir_X != 0:
+                if self.y-self.PLAYER_SIZE/2 > items[map.stage].y+15:
+                    self.y=items[map.stage].y+20+self.PLAYER_SIZE/2
+                elif self.y < items[map.stage].y - 15:
+                    self.y = items[map.stage].y -20
+                elif self.dir_X ==1:
+                    self.x=items[map.stage].x-20-self.PLAYER_SIZE/2+10
+                elif self.dir_X == -1:
+                    self.x =items[map.stage].x+20+self.PLAYER_SIZE/2-10
+            if self.dir_Y != 0:
+                if self.x -self.PLAYER_SIZE/2 +10 >items[map.stage].x+15:
+                    self.x = items[map.stage].x+20 + self.PLAYER_SIZE/2 -10
+                elif self.x +self.PLAYER_SIZE/2 - 10 <items[map.stage].x-15:
+                    self.x = items[map.stage].x-20 - self.PLAYER_SIZE/2 +10
+                elif self.dir_Y ==1:
+                    self.y=items[map.stage].y-20
+                elif self.dir_Y == -1:
+                    self.y =items[map.stage].y+20+self.PLAYER_SIZE/2
+
+
 
 
     def draw(self):
@@ -113,22 +153,25 @@ class Isaac:
         self.head_image.clip_draw(self.head_frame * 32, 320-32*3+self.head_state%3*32 , 32, 32, self.x, self.y+5,self.PLAYER_SIZE,self.PLAYER_SIZE)
 
     def get_bb(self):
-        return self.x-self.PLAYER_SIZE/2,self.y-self.PLAYER_SIZE/2,self.x + self.PLAYER_SIZE/2,self.y + self.PLAYER_SIZE/2
+        return self.x-self.PLAYER_SIZE/2+10,self.y-self.PLAYER_SIZE/2,self.x + self.PLAYER_SIZE/2-10,self.y
 
     def draw_bb(self):
         draw_rectangle(*self.get_bb())
 
 
 def enter():
-    global player,map
+    global player,map,items,monsters
 
     player =Isaac()
+    map = Map()
+    items = [Item(i) for i in range(3)]
 
 def exit():
-    global player,map
+    global player,map,items
 
     del(player)
     del(map)
+    del(items)
 
 def pause():
     pass
@@ -150,6 +193,7 @@ def collide(a, b):
 
 def handle_events(frame_time):
     global player
+    global map
 
     events = get_events()
     for event in events:
@@ -160,6 +204,14 @@ def handle_events(frame_time):
                 # game_framework.change_state(title_state)
                 pass
             if event.type == SDL_KEYDOWN:
+                if event.key ==SDLK_1:
+                    map.inMonster=True
+                    map.update()
+                if event.key ==SDLK_2:
+                    map.inMonster = False
+                    map.update()
+
+
                 if event.key == SDLK_a:
                     player.body_state = player.MOVE_LEFT
                     player.dir_X = -1
@@ -211,24 +263,133 @@ def handle_events(frame_time):
 
 
 def update(frame_time):
-    global player
+    global player, map
     player.update(frame_time)
+    map.monster_left[map.stage].update(frame_time)
+    map.monster_bottom[map.stage].update(frame_time)
 
     for bullet in player.bullets:
         bullet.update(frame_time)
+        if not collide(bullet,map):
+            bullet.collision = True
+        elif collide(bullet,items[map.stage]) and map.state == 'TOP_ROOM':
+            bullet.collision = True
+        elif collide(bullet,map.monster_left[map.stage]) and bullet.collision==False and map.state == 'LEFT_ROOM':
+            bullet.collision = True
+            map.monster_left[map.stage].hp -=1
+            if map.monster_left[map.stage].hp <=0:
+                map.inMonster = False
+                map.update()
+        elif collide(bullet,map.monster_bottom[map.stage]) and bullet.collision==False and map.state == 'BOTTOM_ROOM':
+            bullet.collision = True
+            map.monster_bottom[map.stage].hp -=1
+            if map.monster_bottom[map.stage].hp <=0:
+                map.inMonster = False
+                map.update()
+
+
+    if map.state == 'CENTER_ROOM':
+        if collide(player, map.left_door) and map.left_door.lock==map.left_door.OPEN:
+            map.state = 'LEFT_ROOM'
+            player.x = map.right-50
+            if map.monster_left[map.stage].hp>0:
+                map.inMonster=True
+            map.update()
+            for bullet in player.bullets:
+                bullet.reset()
+        if collide(player, map.right_door) and map.right_door.lock==map.right_door.OPEN:
+            map.state = 'RIGHT_ROOM'
+            player.x = map.left+50
+            map.update()
+            for bullet in player.bullets:
+                bullet.reset()
+        if collide(player, map.bottom_door) and map.bottom_door.lock==map.bottom_door.OPEN:
+            map.state = 'BOTTOM_ROOM'
+            player.y= map.top-50
+            if map.monster_bottom[map.stage].hp>0:
+                map.inMonster=True
+            map.update()
+            for bullet in player.bullets:
+                bullet.reset()
+        if collide(player, map.top_door) and map.top_door.lock==map.top_door.OPEN:
+            map.state = 'TOP_ROOM'
+            player.y= map.bottom+50
+            map.update()
+            for bullet in player.bullets:
+                bullet.reset()
+
+    if map.state == 'LEFT_ROOM' and map.right_door.lock==map.right_door.OPEN:
+        if collide(player, map.right_door):
+            map.state = 'CENTER_ROOM'
+            player.x = map.left+50
+            map.update()
+            for bullet in player.bullets:
+                bullet.reset()
+    if map.state == 'RIGHT_ROOM' and map.left_door.lock==map.left_door.OPEN:
+        if collide(player, map.left_door):
+            map.state = 'CENTER_ROOM'
+            player.x = map.right-50
+            map.update()
+            for bullet in player.bullets:
+                bullet.reset()
+        if collide(player,map.trap_door):
+            map.stage +=1
+
+            map.state = 'CENTER_ROOM'
+            player.x,player.y= 400,300
+            map.update()
+            for bullet in player.bullets:
+                bullet.reset()
+
+    if map.state == 'TOP_ROOM' and map.bottom_door.lock==map.bottom_door.OPEN:
+        if collide(player, map.bottom_door):
+            map.state = 'CENTER_ROOM'
+            player.y= map.top-50
+            map.update()
+            for bullet in player.bullets:
+                bullet.reset()
+    if map.state == 'BOTTOM_ROOM' and map.top_door.lock==map.top_door.OPEN:
+        if collide(player, map.top_door):
+            map.state = 'CENTER_ROOM'
+            player.y= map.bottom+50
+            map.update()
+            for bullet in player.bullets:
+                bullet.reset()
+
+
+
+
+
 
 
 def draw(frame_time):
-    global player,map
+    global player,map,items
 
     clear_canvas()
+
+    map.draw()
+    map.draw_door()
     player.draw()
     for bullet in player.bullets:
         bullet.draw()
+    if map.state == 'TOP_ROOM':
+        items[map.stage].draw()
+    if map.state == map.monster_left[map.stage].room:
+        map.monster_left[map.stage].draw()
+    if map.state == map.monster_bottom[map.stage].room:
+        map.monster_bottom[map.stage].draw()
 
     player.draw_bb()
     for bullet in player.bullets:
         bullet.draw_bb()
+    if map.state == 'TOP_ROOM':
+        items[map.stage].draw_bb()
+    map.draw_bb()
+    map.draw_door_bb()
+    if map.state == map.monster_left[map.stage].room:
+        map.monster_left[map.stage].draw_bb()
+    if map.state == map.monster_bottom[map.stage].room:
+        map.monster_bottom[map.stage].draw_bb()
 
     update_canvas()
 
