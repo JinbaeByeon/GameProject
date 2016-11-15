@@ -6,6 +6,8 @@ from pico2d import *
 
 import game_framework
 
+from bullet import Bullet
+
 
 name = "MainState"
 
@@ -49,6 +51,11 @@ class Isaac:
         self.dir_Y = 0
         self.head_state = self.NOT_SHOT
         self.body_state = self.NOT_MOVE
+        self.shot_Enable = True
+
+        self.bullets = [Bullet() for i in range(8)]
+        self.current = 0
+
         if Isaac.head == None:
             Isaac.head_image = load_image('isaac.png')
         if Isaac.body == None:
@@ -56,6 +63,7 @@ class Isaac:
 
     def update(self, frame_time):
         distance = Isaac.RUN_SPEED_PPS * frame_time
+
         if self.head_state is not self.NOT_SHOT:
             self.head_total_frames += 2*self.shot_speed * frame_time
             if self.head_state == self.HEAD_DOWN:
@@ -67,6 +75,24 @@ class Isaac:
             if self.head_state == self.HEAD_LEFT:
                 self.head_frame = 6
             self.head_frame += int(self.head_total_frames) % 2
+
+            if self.head_frame%2 == 1 and self.shot_Enable:
+                self.bullets[self.current].x=self.x
+                self.bullets[self.current].y=self.y
+
+                if self.head_state == self.HEAD_LEFT:
+                    self.bullets[self.current].dir_X = -1
+                if self.head_state == self.HEAD_RIGHT:
+                    self.bullets[self.current].dir_X = 1
+                if self.head_state == self.HEAD_UP:
+                    self.bullets[self.current].dir_Y = 1
+                if self.head_state == self.HEAD_DOWN:
+                    self.bullets[self.current].dir_Y = -1
+                self.shot_Enable = False
+
+            elif self.head_frame%2 == 0:
+                self.shot_Enable = True
+            self.current = (self.current +1)%8
         else:
             self.head_frame = 0
 
@@ -79,7 +105,6 @@ class Isaac:
 
         self.x += self.dir_X*distance
         self.y += self.dir_Y*distance
-
 
 
 
@@ -189,14 +214,21 @@ def update(frame_time):
     global player
     player.update(frame_time)
 
+    for bullet in player.bullets:
+        bullet.update(frame_time)
+
 
 def draw(frame_time):
     global player,map
 
     clear_canvas()
     player.draw()
+    for bullet in player.bullets:
+        bullet.draw()
 
     player.draw_bb()
+    for bullet in player.bullets:
+        bullet.draw_bb()
 
     update_canvas()
 
