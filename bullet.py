@@ -19,7 +19,7 @@ class Bullet:
     FRAMES_PER_ACTION = 16
 
     def __init__(self):
-        self.x, self.y = 400,300
+        self.x, self.y = 400, 300
         self.power = 0
         self.color = self.WHITE_BULLET
         self.dir_X = 0
@@ -55,11 +55,8 @@ class Bullet:
             self.dir_Y = 0
             self.effect_frame += Bullet.FRAMES_PER_ACTION * Bullet.ACTION_PER_TIME *frame_time
             if self.effect_frame >= 15:
-                self.time = 0
-                self.effect_frame = 0
-                self.isEffect = False
-                self.collision = False
-                self.x,self.y = 400,300
+                self.reset()
+
 
 
     def draw(self):

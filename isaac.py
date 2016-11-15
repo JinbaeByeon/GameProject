@@ -4,11 +4,13 @@ import os
 
 from pico2d import *
 import math
+import start_state
 import game_framework
 
 from bullet import Bullet
 from map import Map
 from item import Item
+from monster import Monster
 
 name = "MainState"
 
@@ -40,9 +42,10 @@ class Isaac:
     HEAD_LEFT,HEAD_RIGHT,HEAD_UP,HEAD_DOWN,NOT_SHOT =2,5,8,11,14
 
     def __init__(self):
-        self.x, self.y = 400, 300
+        self.x, self.y = 400, 250
         self.hp = 3
         self.shot_speed =3
+        self.power =1
         self.head_frame = 0
         self.head_total_frames = 0.0
         self.body_frame =0
@@ -220,16 +223,145 @@ class Isaac:
                 if map.monster_bottom[map.stage].hp <=0:
                     map.inMonster = False
                     map.update()
+            if map.state == 'RIGHT_ROOM':
+                #for boss in map.monster_boss[map.stage]:
+                #    if self.laser_dir == self.HEAD_LEFT and self.y-25 -boss.size < boss.y and boss.y<self.y+25+boss.size:
+                #        boss.hp -= frame_time*20
+                #    if self.laser_dir == self.HEAD_DOWN and self.x-25 -boss.size < boss.x and boss.x<self.x+25+boss.size:
+                #        boss.hp -= frame_time*20
+                #    if self.laser_dir == self.HEAD_RIGHT and self.y-25 -boss.size < boss.y and boss.y<self.y+25+boss.size:
+                #        boss.hp -= frame_time*20
+                #    if self.laser_dir == self.HEAD_UP and self.x-25 -boss.size < boss.x and boss.x<self.x+25+boss.size:
+                #        boss.hp -= frame_time*20
+#
+                #    if boss.hp <=0:
+                #        map.inMonster = False
+                #        map.update()
 
+                map.inMonster = False
+                for i in range(8):
+                    if ((self.laser_dir == self.HEAD_UP and self.x - 25 - map.monster_boss[map.stage][i].size < map.monster_boss[map.stage][i].x and map.monster_boss[map.stage][i].x < self.x + 25 + map.monster_boss[map.stage][i].size) or
+                        (self.laser_dir == self.HEAD_RIGHT and self.y - 25 - map.monster_boss[map.stage][i].size < map.monster_boss[map.stage][i].y and map.monster_boss[map.stage][i].y < self.y + 25 + map.monster_boss[map.stage][i].size) or
+                        (self.laser_dir == self.HEAD_DOWN and self.x - 25 - map.monster_boss[map.stage][i].size < map.monster_boss[map.stage][i].x and map.monster_boss[map.stage][i].x < self.x + 25 + map.monster_boss[map.stage][i].size) or
+                        (self.laser_dir == self.HEAD_LEFT and self.y - 25 - map.monster_boss[map.stage][i].size < map.monster_boss[map.stage][i].y and map.monster_boss[map.stage][i].y < self.y + 25 + map.monster_boss[map.stage][i].size)):
+                        if map.monster_boss[map.stage][i].hp > 16:
+                            map.monster_boss[map.stage][7].hp -= frame_time*2
+                            map.monster_boss[map.stage][6].hp -= frame_time*2
+                            map.monster_boss[map.stage][5].hp -= frame_time*2
+                            map.monster_boss[map.stage][4].hp -= frame_time*2
+                            map.monster_boss[map.stage][3].hp -= frame_time*2
+                            map.monster_boss[map.stage][2].hp -= frame_time*2
+                            map.monster_boss[map.stage][1].hp -= frame_time*2
+                            map.monster_boss[map.stage][0].hp -= frame_time*2
+                        elif map.monster_boss[map.stage][i].hp > 8:
+                            if i >= 4:
+                                map.monster_boss[map.stage][7].hp -= frame_time*4
+                                map.monster_boss[map.stage][6].hp -= frame_time*4
+                                map.monster_boss[map.stage][5].hp -= frame_time*4
+                                map.monster_boss[map.stage][4].hp -= frame_time*4
+                            else:
+                                map.monster_boss[map.stage][3].hp -= frame_time*4
+                                map.monster_boss[map.stage][2].hp -= frame_time*4
+                                map.monster_boss[map.stage][1].hp -= frame_time*4
+                                map.monster_boss[map.stage][0].hp -= frame_time*4
+                        elif map.monster_boss[map.stage][i].hp > 4:
+                            if i >= 6:
+                                map.monster_boss[map.stage][6].hp -= frame_time*6
+                                map.monster_boss[map.stage][7].hp -= frame_time*6
+                            elif i >= 4:
+                                map.monster_boss[map.stage][4].hp -= frame_time*6
+                                map.monster_boss[map.stage][5].hp -= frame_time*6
+                            elif i >= 2:
+                                map.monster_boss[map.stage][2].hp -= frame_time*6
+                                map.monster_boss[map.stage][3].hp -= frame_time*6
+                            else:
+                                map.monster_boss[map.stage][0].hp -= frame_time*6
+                                map.monster_boss[map.stage][1].hp -= frame_time*6
+                        else:
+                            map.monster_boss[map.stage][i].hp -= frame_time*8
+                        if (int)(map.monster_boss[map.stage][i].hp) == 16 and map.monster_boss[map.stage][i].split == False:
+                            for j in range(8):
+                                map.monster_boss[map.stage][j].split = True
+                        if (int)(map.monster_boss[map.stage][i].hp)==15 and map.monster_boss[map.stage][i].split == True:
+                            for j in range(8):
+                                map.monster_boss[map.stage][j].split = False
+                            map.monster_boss[map.stage][7].dir_X = -map.monster_boss[map.stage][7].dir_X
+                            map.monster_boss[map.stage][6].dir_X = -map.monster_boss[map.stage][6].dir_X
+                            map.monster_boss[map.stage][5].dir_X = -map.monster_boss[map.stage][5].dir_X
+                            map.monster_boss[map.stage][4].dir_X = -map.monster_boss[map.stage][4].dir_X
+                            map.monster_boss[map.stage][7].dir_Y = -map.monster_boss[map.stage][7].dir_Y
+                            map.monster_boss[map.stage][6].dir_Y = -map.monster_boss[map.stage][6].dir_Y
+                            map.monster_boss[map.stage][5].dir_Y = -map.monster_boss[map.stage][5].dir_Y
+                            map.monster_boss[map.stage][4].dir_Y = -map.monster_boss[map.stage][4].dir_Y
+                        if (int)(map.monster_boss[map.stage][i].hp) == 9 and map.monster_boss[map.stage][i].split == False:
+                            if i >= 4:
+                                for j in range(4):
+                                    map.monster_boss[map.stage][j+4].split = True
+                            else:
+                                for j in range(4):
+                                    map.monster_boss[map.stage][j].split = True
+                        if (int)(map.monster_boss[map.stage][i].hp) == 8 and map.monster_boss[map.stage][i].split==True:
+                            if i >= 4:
+                                for j in range(4):
+                                    map.monster_boss[map.stage][j+4].split = False
+                                map.monster_boss[map.stage][7].dir_X = -map.monster_boss[map.stage][7].dir_X
+                                map.monster_boss[map.stage][6].dir_X = -map.monster_boss[map.stage][6].dir_X
+                                map.monster_boss[map.stage][7].dir_Y = -map.monster_boss[map.stage][7].dir_Y
+                                map.monster_boss[map.stage][6].dir_Y = -map.monster_boss[map.stage][6].dir_Y
+                            else:
+                                for j in range(4):
+                                    map.monster_boss[map.stage][j].split = False
+                                map.monster_boss[map.stage][3].dir_X = -map.monster_boss[map.stage][3].dir_X
+                                map.monster_boss[map.stage][2].dir_X = -map.monster_boss[map.stage][2].dir_X
+                                map.monster_boss[map.stage][3].dir_Y = -map.monster_boss[map.stage][3].dir_Y
+                                map.monster_boss[map.stage][2].dir_Y = -map.monster_boss[map.stage][2].dir_Y
 
+                        if (int)(map.monster_boss[map.stage][i].hp) == 5 and map.monster_boss[map.stage][i].split==False:
+                            if i>=6:
+                                    map.monster_boss[map.stage][7].split = True
+                                    map.monster_boss[map.stage][6].split = True
+                            elif i>=4:
+                                    map.monster_boss[map.stage][5].split = True
+                                    map.monster_boss[map.stage][4].split = True
+                            elif i>=2:
+                                    map.monster_boss[map.stage][3].split = True
+                                    map.monster_boss[map.stage][2].split = True
+                            else:
+                                    map.monster_boss[map.stage][1].split = True
+                                    map.monster_boss[map.stage][0].split = True
+                        if (int)(map.monster_boss[map.stage][i].hp) == 4 and map.monster_boss[map.stage][i].split==True:
+                            if i >= 6:
+                                map.monster_boss[map.stage][7].split = False
+                                map.monster_boss[map.stage][6].split = False
+                                map.monster_boss[map.stage][7].dir_X = -map.monster_boss[map.stage][7].dir_X
+                                map.monster_boss[map.stage][7].dir_Y = -map.monster_boss[map.stage][7].dir_Y
+                            elif i >= 4:
+                                map.monster_boss[map.stage][5].split = False
+                                map.monster_boss[map.stage][4].split = False
+                                map.monster_boss[map.stage][5].dir_X = -map.monster_boss[map.stage][5].dir_X
+                                map.monster_boss[map.stage][5].dir_Y = -map.monster_boss[map.stage][5].dir_Y
+                            elif i >= 2:
+                                map.monster_boss[map.stage][3].split = False
+                                map.monster_boss[map.stage][2].split = False
+                                map.monster_boss[map.stage][3].dir_X = -map.monster_boss[map.stage][3].dir_X
+                                map.monster_boss[map.stage][3].dir_Y = -map.monster_boss[map.stage][3].dir_Y
+                            else:
+                                map.monster_boss[map.stage][1].split = False
+                                map.monster_boss[map.stage][0].split = False
+                                map.monster_boss[map.stage][1].dir_X = -map.monster_boss[map.stage][1].dir_X
+                                map.monster_boss[map.stage][1].dir_Y = -map.monster_boss[map.stage][1].dir_Y
 
+                if map.monster_boss[map.stage][i].hp > 0:
+                    map.inMonster = True
 
+                if map.inMonster == False:
+                    map.update()
     def draw(self):
         if self.laser_shot and self.laser_dir == self.HEAD_UP:
             self.laser_image.clip_draw_to_origin(0,0,112,256,self.x-25,self.y+10,50,map.top-self.y)
             self.laser_impact.clip_draw(math.floor(self.rad%2)*64,math.floor((self.rad/2)%2)*64,64,64,self.x,map.top+10,80,80)
-        self.body_image.clip_draw(self.body_frame * 32, 320-32*3+self.body_state%3*32 , 32, 32, self.x, self.y-10,self.PLAYER_SIZE,self.PLAYER_SIZE)
-        self.head_image.clip_draw(self.head_frame * 32, 320-32*3+self.head_state%3*32 , 32, 32, self.x, self.y+5,self.PLAYER_SIZE,self.PLAYER_SIZE)
+        Isaac.body_image.clip_draw(self.body_frame * 32, 320-32*3+self.body_state%3*32 , 32, 32, self.x, self.y-10,self.PLAYER_SIZE,self.PLAYER_SIZE)
+        Isaac.head_image.clip_draw(self.head_frame * 32, 320-32*3+self.head_state%3*32 , 32, 32, self.x, self.y+5,self.PLAYER_SIZE,self.PLAYER_SIZE)
         if self.laser_enable and self.laser_shot is False:
             if self.head_state == self.HEAD_DOWN:
                 self.laser_swirling.rotate_draw(self.rad,self.x,self.y-10,30,30)
@@ -299,15 +431,13 @@ def handle_events(frame_time):
             game_framework.quit()
         else:
             if (event.type, event.key) == (SDL_KEYDOWN, SDLK_ESCAPE):
-                # game_framework.change_state(title_state)
-                pass
+                game_framework.change_state(start_state)
             if event.type == SDL_KEYDOWN:
                 if event.key ==SDLK_1:
-                    map.inMonster=True
-                    map.update()
+                    player.power =20
                 if event.key ==SDLK_2:
-                    map.inMonster = False
-                    map.update()
+                    player.power =1
+                    player.laser = False
 
 
                 if event.key == SDLK_a:
@@ -367,8 +497,13 @@ def handle_events(frame_time):
 def update(frame_time):
     global player, map
     player.update(frame_time)
-    map.monster_left[map.stage].update(frame_time)
-    map.monster_bottom[map.stage].update(frame_time)
+    if map.state == 'LEFT_ROOM':
+        map.monster_left[map.stage].update(frame_time)
+    elif map.state == 'BOTTOM_ROOM':
+        map.monster_bottom[map.stage].update(frame_time)
+    elif map.state == 'RIGHT_ROOM':
+        for boss in map.monster_boss[map.stage]:
+            boss.update(frame_time)
 
     for bullet in player.bullets:
         bullet.update(frame_time)
@@ -376,17 +511,101 @@ def update(frame_time):
             bullet.collision = True
         elif collide(bullet,items[map.stage]) and map.state == 'TOP_ROOM':
             bullet.collision = True
-        elif collide(bullet,map.monster_left[map.stage]) and bullet.collision==False and map.state == 'LEFT_ROOM':
+        elif collide(bullet,map.monster_left[map.stage]) and bullet.collision==False and map.state == 'LEFT_ROOM'and (bullet.dir_X !=0 or bullet.dir_Y !=0) and map.monster_left[map.stage].hp >0:
             bullet.collision = True
-            map.monster_left[map.stage].hp -=1
+            map.monster_left[map.stage].hp -=player.power
             if map.monster_left[map.stage].hp <=0:
                 map.inMonster = False
                 map.update()
-        elif collide(bullet,map.monster_bottom[map.stage]) and bullet.collision==False and map.state == 'BOTTOM_ROOM':
+        elif collide(bullet,map.monster_bottom[map.stage]) and bullet.collision==False and map.state == 'BOTTOM_ROOM'and (bullet.dir_X !=0 or bullet.dir_Y !=0)and map.monster_bottom[map.stage].hp >0:
             bullet.collision = True
-            map.monster_bottom[map.stage].hp -=1
+            map.monster_bottom[map.stage].hp -=player.power
             if map.monster_bottom[map.stage].hp <=0:
                 map.inMonster = False
+                map.update()
+
+        # 보스1 충돌알고리즘
+        if map.state == 'RIGHT_ROOM':
+            map.inMonster = False
+            for i in range(8):
+                if collide(bullet,map.monster_boss[map.stage][i]) and bullet.collision==False and (bullet.dir_X !=0 or bullet.dir_Y !=0)and map.monster_boss[map.stage][i].hp >0:
+                    bullet.collision = True
+                    if map.monster_boss[map.stage][i].hp>16:
+                        map.monster_boss[map.stage][7].hp -=player.power
+                        map.monster_boss[map.stage][6].hp -=player.power
+                        map.monster_boss[map.stage][5].hp -=player.power
+                        map.monster_boss[map.stage][4].hp -=player.power
+                        map.monster_boss[map.stage][3].hp -=player.power
+                        map.monster_boss[map.stage][2].hp -=player.power
+                        map.monster_boss[map.stage][1].hp -=player.power
+                        map.monster_boss[map.stage][0].hp -=player.power
+                    elif map.monster_boss[map.stage][i].hp>8:
+                        if i>=4:
+                            map.monster_boss[map.stage][7].hp -=player.power
+                            map.monster_boss[map.stage][6].hp -=player.power
+                            map.monster_boss[map.stage][5].hp -=player.power
+                            map.monster_boss[map.stage][4].hp -=player.power
+                        else:
+                            map.monster_boss[map.stage][3].hp -=player.power
+                            map.monster_boss[map.stage][2].hp -=player.power
+                            map.monster_boss[map.stage][1].hp -=player.power
+                            map.monster_boss[map.stage][0].hp -=player.power
+
+                    elif map.monster_boss[map.stage][i].hp>4:
+                        if i>=6:
+                            map.monster_boss[map.stage][6].hp -=player.power
+                            map.monster_boss[map.stage][7].hp -=player.power
+                        elif i>=4:
+                            map.monster_boss[map.stage][4].hp -=player.power
+                            map.monster_boss[map.stage][5].hp -=player.power
+                        elif i>=2:
+                            map.monster_boss[map.stage][2].hp -=player.power
+                            map.monster_boss[map.stage][3].hp -=player.power
+                        else:
+                            map.monster_boss[map.stage][0].hp -=player.power
+                            map.monster_boss[map.stage][1].hp -=player.power
+
+                    else:
+                        map.monster_boss[map.stage][i].hp-=1
+
+                    if map.monster_boss[map.stage][i].hp == 16:
+                            map.monster_boss[map.stage][7].dir_X =-map.monster_boss[map.stage][7].dir_X
+                            map.monster_boss[map.stage][6].dir_X =-map.monster_boss[map.stage][6].dir_X
+                            map.monster_boss[map.stage][5].dir_X =-map.monster_boss[map.stage][5].dir_X
+                            map.monster_boss[map.stage][4].dir_X =-map.monster_boss[map.stage][4].dir_X
+                            map.monster_boss[map.stage][7].dir_Y =-map.monster_boss[map.stage][7].dir_Y
+                            map.monster_boss[map.stage][6].dir_Y =-map.monster_boss[map.stage][6].dir_Y
+                            map.monster_boss[map.stage][5].dir_Y =-map.monster_boss[map.stage][5].dir_Y
+                            map.monster_boss[map.stage][4].dir_Y =-map.monster_boss[map.stage][4].dir_Y
+                    if map.monster_boss[map.stage][i].hp == 8:
+                        if i>=4:
+                            map.monster_boss[map.stage][7].dir_X =-map.monster_boss[map.stage][7].dir_X
+                            map.monster_boss[map.stage][6].dir_X =-map.monster_boss[map.stage][6].dir_X
+                            map.monster_boss[map.stage][7].dir_Y =-map.monster_boss[map.stage][7].dir_Y
+                            map.monster_boss[map.stage][6].dir_Y =-map.monster_boss[map.stage][6].dir_Y
+                        else:
+                            map.monster_boss[map.stage][3].dir_X =-map.monster_boss[map.stage][3].dir_X
+                            map.monster_boss[map.stage][2].dir_X =-map.monster_boss[map.stage][2].dir_X
+                            map.monster_boss[map.stage][3].dir_Y =-map.monster_boss[map.stage][3].dir_Y
+                            map.monster_boss[map.stage][2].dir_Y =-map.monster_boss[map.stage][2].dir_Y
+                    if map.monster_boss[map.stage][i].hp == 4:
+                        if i>=6:
+                            map.monster_boss[map.stage][7].dir_X =-map.monster_boss[map.stage][7].dir_X
+                            map.monster_boss[map.stage][7].dir_Y =-map.monster_boss[map.stage][7].dir_Y
+                        if i>=4:
+                            map.monster_boss[map.stage][5].dir_X =-map.monster_boss[map.stage][5].dir_X
+                            map.monster_boss[map.stage][5].dir_Y =-map.monster_boss[map.stage][5].dir_Y
+                        elif i>=2:
+                            map.monster_boss[map.stage][3].dir_X =-map.monster_boss[map.stage][3].dir_X
+                            map.monster_boss[map.stage][3].dir_Y =-map.monster_boss[map.stage][3].dir_Y
+                        else:
+                            map.monster_boss[map.stage][1].dir_X =-map.monster_boss[map.stage][1].dir_X
+                            map.monster_boss[map.stage][1].dir_Y =-map.monster_boss[map.stage][1].dir_Y
+
+                if map.monster_boss[map.stage][i].hp > 0:
+                    map.inMonster = True
+
+            if map.inMonster == False:
                 map.update()
 
 
@@ -402,6 +621,10 @@ def update(frame_time):
         if collide(player, map.right_door) and map.right_door.lock==map.right_door.OPEN:
             map.state = 'RIGHT_ROOM'
             player.x = map.left+50
+            map.inMonster=False
+            for boss in map.monster_boss[map.stage]:
+                if boss.hp>0:
+                    map.inMonster=True
             map.update()
             for bullet in player.bullets:
                 bullet.reset()
@@ -438,7 +661,7 @@ def update(frame_time):
             map.stage +=1
 
             map.state = 'CENTER_ROOM'
-            player.x,player.y= 400,300
+            player.x,player.y= 400,250
             map.update()
             for bullet in player.bullets:
                 bullet.reset()
@@ -458,6 +681,16 @@ def update(frame_time):
             for bullet in player.bullets:
                 bullet.reset()
 
+    for boss in map.monster_boss[map.stage]:
+        if collide(boss,map):
+            if boss.x - boss.size/2 < map.left:
+                boss.dir_X = 1
+            if boss.x + boss.size/2 > map.right:
+                boss.dir_X = -1
+            if boss.y - boss.size/2 < map.bottom:
+                boss.dir_Y = 1
+            if boss.y + boss.size/2 > map.top:
+                boss.dir_Y = -1
 
 
 
@@ -471,7 +704,6 @@ def draw(frame_time):
 
     map.draw()
     map.draw_door()
-    player.draw()
     for bullet in player.bullets:
         bullet.draw()
     if map.state == 'TOP_ROOM':
@@ -480,6 +712,10 @@ def draw(frame_time):
         map.monster_left[map.stage].draw()
     if map.state == map.monster_bottom[map.stage].room:
         map.monster_bottom[map.stage].draw()
+    if map.state == 'RIGHT_ROOM':
+        for boss in map.monster_boss[map.stage]:
+            boss.draw()
+    player.draw()
 
     player.draw_bb()
     for bullet in player.bullets:
@@ -492,6 +728,9 @@ def draw(frame_time):
         map.monster_left[map.stage].draw_bb()
     if map.state == map.monster_bottom[map.stage].room:
         map.monster_bottom[map.stage].draw_bb()
+    if map.state == 'RIGHT_ROOM':
+        for boss in map.monster_boss[map.stage]:
+            boss.draw_bb()
 
     update_canvas()
 

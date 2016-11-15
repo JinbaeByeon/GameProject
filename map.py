@@ -1,6 +1,7 @@
 from pico2d import *
 from door import Door
 from monster import Monster
+import json
 
 class Map:
     global player
@@ -12,6 +13,11 @@ class Map:
         self.inMonster = False
         self.monster_left =[Monster('clotty','LEFT_ROOM') for i in range(3)]
         self.monster_bottom = [Monster('redhost','BOTTOM_ROOM') for i in range(3)]
+        self.monster_boss ={0 : [Monster('boss1','RIGHT_ROOM') for j in range(8)],
+                            1 : [Monster('boss1','RIGHT_ROOM') for j in range(8)],
+                            2 : [Monster('boss1','RIGHT_ROOM') for j in range(8)]}
+
+
         self.map_image= {0:load_image('basement.png'),1:load_image('cellar.png'),2:load_image('basement.png')}
         self.bg_image = load_image('bgblack.png')
 
@@ -97,13 +103,3 @@ class Map:
             self.bottom_door.unlock()
 
 
-def collide(a, b):
-        left_a, bottom_a, right_a, top_a = a.get_bb()
-        left_b, bottom_b, right_b, top_b = b.get_bb()
-
-        if left_a > right_b: return False
-        if right_a < left_b: return False
-        if top_a < bottom_b: return False
-        if bottom_a > top_b: return False
-
-        return True
