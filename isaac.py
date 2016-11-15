@@ -3,7 +3,7 @@ import json
 import os
 
 from pico2d import *
-
+import math
 import game_framework
 
 from bullet import Bullet
@@ -53,6 +53,11 @@ class Isaac:
         self.body_state = self.NOT_MOVE
         self.shot_Enable = True
         self.gauge = 0.0
+        self.laser = False
+        self.laser_enable = False
+        self.laser_shot = False
+        self.laser_dir = 0
+        self.rad = 0
 
         self.bullets = [Bullet() for i in range(8)]
         self.current = 0
@@ -62,10 +67,13 @@ class Isaac:
         if Isaac.body == None:
             Isaac.body_image = load_image('isaac.png')
 
+        self.laser_image = load_image('laser.png')
+        self.laser_swirling = load_image('laser_swirl.png')
+        self.laser_impact = load_image('laser_impact.png')
     def update(self, frame_time):
         distance = Isaac.RUN_SPEED_PPS * frame_time
 
-        if self.head_state is not self.NOT_SHOT:
+        if self.head_state is not self.NOT_SHOT and self.laser == False:
             self.head_total_frames += 2*self.shot_speed * frame_time
             if self.head_state == self.HEAD_DOWN:
                 self.head_frame = 0
@@ -89,6 +97,10 @@ class Isaac:
                     self.bullets[self.current].dir_Y = 1
                 if self.head_state == self.HEAD_DOWN:
                     self.bullets[self.current].dir_Y = -1
+
+                self.bullets[self.current].dir_X += self.dir_X/10
+                self.bullets[self.current].dir_Y += self.dir_Y/10
+
                 self.current = (self.current +1)%8
                 self.shot_Enable = False
 
@@ -96,6 +108,42 @@ class Isaac:
                 self.shot_Enable = True
         else:
             self.head_frame = 0
+
+        if self.laser and self.head_state is not self.NOT_SHOT:
+            if self.head_state == self.HEAD_DOWN:
+                self.head_frame = 0
+            if self.head_state == self.HEAD_RIGHT:
+                self.head_frame = 2
+            if self.head_state == self.HEAD_UP:
+                self.head_frame = 4
+            if self.head_state == self.HEAD_LEFT:
+                self.head_frame = 6
+            if self.gauge <2 :
+                self.gauge += frame_time
+            else:
+                self.laser_enable = True
+                self.rad += math.pi/70
+
+        if self.laser and self.head_state is self.NOT_SHOT:
+            if self.laser_enable == False:
+                self.gauge = 0
+            else:
+                self.laser_shot =True
+        if(self.laser_shot):
+            self.rad += math.pi/70
+            if self.laser_dir == self.HEAD_DOWN:
+                self.head_frame = 0
+            if self.laser_dir == self.HEAD_RIGHT:
+                self.head_frame = 2
+            if self.laser_dir == self.HEAD_UP:
+                self.head_frame = 4
+            if self.laser_dir == self.HEAD_LEFT:
+                self.head_frame = 6
+            self.gauge+= frame_time
+            if self.gauge > 3:
+                self.gauge = 0
+                self.laser_enable = False
+                self.laser_shot = False
 
         if self.body_state is not self.NOT_MOVE:
             self.body_total_frames += Isaac.FRAMES_PER_ACTION * Isaac.ACTION_PER_TIME * frame_time
@@ -107,9 +155,9 @@ class Isaac:
         self.x += self.dir_X*distance
         self.y += self.dir_Y*distance
 
-        self.collision()
+        self.collision(frame_time)
 
-    def collision(self):
+    def collision(self,frame_time):
         if collide(self,map):
             if self.x-self.PLAYER_SIZE/2+10 < map.left:
                 self.x = map.left + self.PLAYER_SIZE/2-10
@@ -124,7 +172,7 @@ class Isaac:
             items[map.stage].on_Item = False
 
             # 상태변화
-
+            self.laser = True
 
             if self.dir_X != 0:
                 if self.y-self.PLAYER_SIZE/2 > items[map.stage].y+15:
@@ -145,12 +193,62 @@ class Isaac:
                 elif self.dir_Y == -1:
                     self.y =items[map.stage].y+20+self.PLAYER_SIZE/2
 
+        if self.laser_shot == True:
+            if map.state == 'LEFT_ROOM':
+                if self.laser_dir == self.HEAD_LEFT and self.y-50 < map.monster_left[map.stage].y and map.monster_left[map.stage].y<self.y+50:
+                    map.monster_left[map.stage].hp -= frame_time*20
+                if self.laser_dir == self.HEAD_DOWN and self.x-50 < map.monster_left[map.stage].x and map.monster_left[map.stage].x<self.x+50:
+                    map.monster_left[map.stage].hp -= frame_time*20
+                if self.laser_dir == self.HEAD_RIGHT and self.y-50 < map.monster_left[map.stage].y and map.monster_left[map.stage].y<self.y+50:
+                    map.monster_left[map.stage].hp -= frame_time*20
+                if self.laser_dir == self.HEAD_UP and self.x-50 < map.monster_left[map.stage].x and map.monster_left[map.stage].x<self.x+50:
+                    map.monster_left[map.stage].hp -= frame_time*20
+
+                if map.monster_left[map.stage].hp <= 0:
+                    map.inMonster = False
+                    map.update()
+            if map.state == 'BOTTOM_ROOM':
+                if self.laser_dir == self.HEAD_LEFT and self.y-50 < map.monster_bottom[map.stage].y and map.monster_bottom[map.stage].y<self.y+50:
+                    map.monster_bottom[map.stage].hp -= frame_time*20
+                if self.laser_dir == self.HEAD_DOWN and self.x-50 < map.monster_bottom[map.stage].x and map.monster_bottom[map.stage].x<self.x+50:
+                    map.monster_bottom[map.stage].hp -= frame_time*20
+                if self.laser_dir == self.HEAD_RIGHT and self.y-50 < map.monster_bottom[map.stage].y and map.monster_bottom[map.stage].y<self.y+50:
+                    map.monster_bottom[map.stage].hp -= frame_time*20
+                if self.laser_dir == self.HEAD_UP and self.x-50 < map.monster_bottom[map.stage].x and map.monster_bottom[map.stage].x<self.x+50:
+                    map.monster_bottom[map.stage].hp -= frame_time*20
+
+                if map.monster_bottom[map.stage].hp <=0:
+                    map.inMonster = False
+                    map.update()
+
 
 
 
     def draw(self):
+        if self.laser_shot and self.laser_dir == self.HEAD_UP:
+            self.laser_image.clip_draw_to_origin(0,0,112,256,self.x-25,self.y+10,50,map.top-self.y)
+            self.laser_impact.clip_draw(math.floor(self.rad%2)*64,math.floor((self.rad/2)%2)*64,64,64,self.x,map.top+10,80,80)
         self.body_image.clip_draw(self.body_frame * 32, 320-32*3+self.body_state%3*32 , 32, 32, self.x, self.y-10,self.PLAYER_SIZE,self.PLAYER_SIZE)
         self.head_image.clip_draw(self.head_frame * 32, 320-32*3+self.head_state%3*32 , 32, 32, self.x, self.y+5,self.PLAYER_SIZE,self.PLAYER_SIZE)
+        if self.laser_enable and self.laser_shot is False:
+            if self.head_state == self.HEAD_DOWN:
+                self.laser_swirling.rotate_draw(self.rad,self.x,self.y-10,30,30)
+            if self.head_state == self.HEAD_UP:
+                self.laser_swirling.rotate_draw(self.rad,self.x,self.y+30,30,30)
+            if self.head_state == self.HEAD_RIGHT:
+                self.laser_swirling.rotate_draw(self.rad,self.x+20,self.y,30,30)
+            if self.head_state == self.HEAD_LEFT:
+                self.laser_swirling.rotate_draw(self.rad,self.x-20,self.y,30,30)
+        if self.laser_shot:
+            if self.laser_dir == self.HEAD_DOWN:
+                self.laser_image.clip_draw_to_origin(0,0,112,256,self.x-25,map.bottom-10,50,self.y-map.bottom)
+                self.laser_impact.clip_draw((4+math.floor(self.rad%2))*64,math.floor((self.rad/2)%2)*64,64,64,self.x,map.bottom-10,80,80)
+            if self.laser_dir == self.HEAD_RIGHT:
+                self.laser_image.clip_draw_to_origin(128,0,256,112,self.x+10,self.y-25,map.right-self.x,50)
+                self.laser_impact.clip_draw((2+math.floor(self.rad%2))*64,math.floor((self.rad/2)%2)*64,64,64,map.right+10,self.y,80,80)
+            if self.laser_dir == self.HEAD_LEFT:
+                self.laser_image.clip_draw_to_origin(127,0,256,112,map.left-10,self.y-25,self.x-map.left-10,50)
+                self.laser_impact.clip_draw((6+math.floor(self.rad%2))*64,math.floor((self.rad/2)%2)*64,64,64,map.left-10,self.y,80,80)
 
     def get_bb(self):
         return self.x-self.PLAYER_SIZE/2+10,self.y-self.PLAYER_SIZE/2,self.x + self.PLAYER_SIZE/2-10,self.y
@@ -160,7 +258,7 @@ class Isaac:
 
 
 def enter():
-    global player,map,items,monsters
+    global player,map,items
 
     player =Isaac()
     map = Map()
@@ -254,12 +352,16 @@ def handle_events(frame_time):
 
                 if event.key == SDLK_LEFT and player.head_state == player.HEAD_LEFT:
                     player.head_state = player.NOT_SHOT
+                    player.laser_dir = player.HEAD_LEFT
                 elif event.key == SDLK_RIGHT and player.head_state == player.HEAD_RIGHT:
                     player.head_state = player.NOT_SHOT
+                    player.laser_dir = player.HEAD_RIGHT
                 elif event.key == SDLK_UP and player.head_state == player.HEAD_UP:
                     player.head_state = player.NOT_SHOT
+                    player.laser_dir = player.HEAD_UP
                 elif event.key == SDLK_DOWN and player.head_state == player.HEAD_DOWN:
                     player.head_state = player.NOT_SHOT
+                    player.laser_dir = player.HEAD_DOWN
 
 
 def update(frame_time):
