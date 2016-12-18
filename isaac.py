@@ -43,6 +43,7 @@ class Isaac:
 
     def __init__(self):
         self.x, self.y = 400, 250
+        self.max_hp = 3
         self.hp = 3
         self.shot_speed =3
         self.power =1
@@ -73,6 +74,8 @@ class Isaac:
         self.laser_image = load_image('laser.png')
         self.laser_swirling = load_image('laser_swirl.png')
         self.laser_impact = load_image('laser_impact.png')
+        self.ui_image = load_image('ui_hearts.png')
+
     def update(self, frame_time):
         distance = Isaac.RUN_SPEED_PPS * frame_time
 
@@ -381,6 +384,12 @@ class Isaac:
             if self.laser_dir == self.HEAD_LEFT:
                 self.laser_image.clip_draw_to_origin(127,0,256,112,map.left-10,self.y-25,self.x-map.left-10,50)
                 self.laser_impact.clip_draw((6+math.floor(self.rad%2))*64,math.floor((self.rad/2)%2)*64,64,64,map.left-10,self.y,80,80)
+
+        for i in range(self.max_hp):
+            self.ui_image.clip_draw(32,16,16,16,600+i*25,550,30,30)
+        for i in range(math.floor(self.hp)):
+            self.ui_image.clip_draw(0,16,16,16,600+i*25,550,30,30)
+
 
 
     def get_bb(self):

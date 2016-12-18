@@ -53,8 +53,11 @@ class Map:
         self.shade_image.draw(400,250,800,500)
         self.ui_image.clip_draw(0,160,32,32,68,550,50,50)
         self.ui_image.clip_draw(0,160,32,32,132,550,50,50)
+        self.ui_image.clip_draw(64,128,32,32,132,540)
         self.ui_image.clip_draw(0,160,32,32,100,530,50,50)
         self.ui_image.clip_draw(0,160,32,32,100,570,50,50)
+        self.ui_image.clip_draw(64,32,32,32,100,570)
+        self.ui_image.clip_draw(0,160,32,32,100,550,50,50)
         self.ui_image.clip_draw(0,160,32,32,100,550,50,50)
         self.ui_image.clip_draw(32,128,32,32,100+self.ui_x[self.state],540+self.ui_y[self.state])
 
