@@ -382,6 +382,7 @@ class Isaac:
                 self.laser_image.clip_draw_to_origin(127,0,256,112,map.left-10,self.y-25,self.x-map.left-10,50)
                 self.laser_impact.clip_draw((6+math.floor(self.rad%2))*64,math.floor((self.rad/2)%2)*64,64,64,map.left-10,self.y,80,80)
 
+
     def get_bb(self):
         return self.x-self.PLAYER_SIZE/2+10,self.y-self.PLAYER_SIZE/2,self.x + self.PLAYER_SIZE/2-10,self.y
 

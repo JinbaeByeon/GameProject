@@ -20,7 +20,7 @@ class Map:
 
         self.map_image= {0:load_image('basement.png'),1:load_image('cellar.png'),2:load_image('basement.png')}
         self.bg_image = load_image('bgblack.png')
-
+        self.shade_image=load_image('shading.png')
         self.left_door = Door('normal', 'LEFT')
         self.right_door =Door('bossroom','RIGHT')
         self.top_door =Door('treasure','TOP')
@@ -32,9 +32,31 @@ class Map:
         self.top_door.unlock()
         self.bottom_door.unlock()
 
+        self.ui_image =load_image('progress.png')
+
+    ui_x={'LEFT_ROOM':-32,
+          'CENTER_ROOM':0,
+          'TOP_ROOM':0,
+          'BOTTOM_ROOM':0,
+          'RIGHT_ROOM':32}
+
+    ui_y = {'LEFT_ROOM': 0,
+            'CENTER_ROOM': 0,
+            'TOP_ROOM': 20,
+            'BOTTOM_ROOM': -20,
+            'RIGHT_ROOM': 0}
+
     def draw(self):
         self.bg_image.draw(400,300,800,600)
+#        self.ui_image.clip_draw(0,160,32,32,100,590,300,600)
         self.map_image[self.stage].draw(400,250,800,500)
+        self.shade_image.draw(400,250,800,500)
+        self.ui_image.clip_draw(0,160,32,32,68,550,50,50)
+        self.ui_image.clip_draw(0,160,32,32,132,550,50,50)
+        self.ui_image.clip_draw(0,160,32,32,100,530,50,50)
+        self.ui_image.clip_draw(0,160,32,32,100,570,50,50)
+        self.ui_image.clip_draw(0,160,32,32,100,550,50,50)
+        self.ui_image.clip_draw(32,128,32,32,100+self.ui_x[self.state],540+self.ui_y[self.state])
 
     def get_bb(self):
         return self.left, self.bottom,self.right,self.top

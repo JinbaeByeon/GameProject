@@ -10,12 +10,14 @@ logo_time = 0.0
 
 def enter():
     global image
+    open_canvas()
     image = load_image('titlemenu.png')
 
 
 def exit():
     global image
     del(image)
+    close_canvas()
 
 def update(frame_time):
     pass
