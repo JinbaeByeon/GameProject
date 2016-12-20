@@ -18,10 +18,14 @@ class Bullet:
     ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
     FRAMES_PER_ACTION = 16
 
-    def __init__(self):
+    def __init__(self,power,color):
         self.x, self.y = 400, 300
-        self.power = 0
-        self.color = self.WHITE_BULLET
+        self.power = power
+        if color == 'white':
+            self.color = self.WHITE_BULLET
+        else:
+            self.color =self.RED_BULLET
+
         self.dir_X = 0
         self.dir_Y = 0
         self.time = 0.0

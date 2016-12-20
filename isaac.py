@@ -63,7 +63,7 @@ class Isaac:
         self.laser_dir = 0
         self.rad = 0
 
-        self.bullets = [Bullet() for i in range(8)]
+        self.bullets = [Bullet(2,'white') for i in range(8)]
         self.current = 0
 
         if Isaac.head == None:
@@ -398,6 +398,8 @@ class Isaac:
             self.ui_image.clip_draw(32,16,16,16,600+i*25,550,30,30)
         for i in range(math.floor(self.hp)):
             self.ui_image.clip_draw(0,16,16,16,600+i*25,550,30,30)
+        if self.hp-math.floor(self.hp) != 0:
+            self.ui_image.clip_draw(16,16,16,16,600 + math.floor(self.hp)*25,550,30,30)
 
 
 
@@ -520,8 +522,28 @@ def update(frame_time):
     global player, map
     player.update(frame_time)
 
-    if map.state == 'LEFT_ROOM':
+    if map.state == 'LEFT_ROOM'and map.monster_left[map.stage].hp>0:
         map.monster_left[map.stage].update(frame_time)
+        for monster in map.monster_left:
+            for bullet in monster.bullets:
+                if not collide(bullet,map):
+                    if bullet.collision == False:
+                        bullet.play_sound()
+                    bullet.collision = True
+                if collide(bullet,player) and (bullet.dir_X !=0 or bullet.dir_Y !=0):
+                    player.hp -= 0.5
+                    if bullet.collision == False:
+                        bullet.play_sound()
+                    bullet.collision = True
+            if collide(monster, map):
+                if monster.x - monster.size / 2 < map.left:
+                   monster.dir_X = 1
+                if monster.x + monster.size / 2 > map.right:
+                   monster.dir_X = -1
+                if monster.y - monster.size / 2 < map.bottom:
+                   monster.dir_Y = 1
+                if monster.y + monster.size / 2 > map.top:
+                   monster.dir_Y = -1
     elif map.state == 'BOTTOM_ROOM':
         map.monster_bottom[map.stage].update(frame_time)
     elif map.state == 'RIGHT_ROOM':
@@ -559,7 +581,7 @@ def update(frame_time):
                 map.update()
 
         # 보스1 충돌알고리즘
-        if map.state == 'RIGHT_ROOM':
+        if map.state == 'RIGHT_ROOM' and map.stage == 0:
             map.inMonster = False
             for i in range(8):
                 if collide(bullet,map.monster_boss[map.stage][i]) and bullet.collision==False and (bullet.dir_X !=0 or bullet.dir_Y !=0)and map.monster_boss[map.stage][i].hp >0:
@@ -637,6 +659,19 @@ def update(frame_time):
                             map.monster_boss[map.stage][1].dir_Y =-map.monster_boss[map.stage][1].dir_Y
 
                 if map.monster_boss[map.stage][i].hp > 0:
+                    map.inMonster = True
+
+            if map.inMonster == False:
+                map.update()
+
+        if map.state == 'RIGHT_ROOM' and map.stage == 1:
+            map.inMonster = False
+            for boss in map.monster_boss[map.stage]:
+                if collide(bullet, boss) and bullet.collision == False and (bullet.dir_X != 0 or bullet.dir_Y != 0) and boss.hp > 0:
+                    bullet.collision = True
+                    if (bullet.dir_X == boss.dir_X and boss.dir_X != 0) or (bullet.dir_Y == boss.dir_Y and boss.dir_Y != 0):
+                        boss.hp -= player.power
+                if boss.hp > 0:
                     map.inMonster = True
 
             if map.inMonster == False:
@@ -737,6 +772,9 @@ def update(frame_time):
             if boss.y + boss.size/2 > map.top:
                 boss.dir_Y = -1
 
+
+    if player.hp <= 0:
+        game_framework.push_state(start_state)
 
 
 
