@@ -30,9 +30,9 @@ class Bullet:
         self.collision = False
 
         if Bullet.image ==None:
-            Bullet.image = load_image('tears.png')
+            Bullet.image = load_image('graphics\\tears.png')
         if Bullet.effect == None:
-            Bullet.effect = load_image('tears_effect.png')
+            Bullet.effect = load_image('graphics\\tears_effect.png')
 
     def reset(self):
         self.x, self.y = 400,300

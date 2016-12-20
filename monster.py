@@ -14,13 +14,13 @@ class Monster:
         self.room = room
         self.die = False
         if self.name == 'clotty':
-            self.image = load_image('monster_clotty.png')
+            self.image = load_image('graphics\\monster_clotty.png')
             self.hp = 10
         if self.name == 'redhost':
-            self.image = load_image('monster_redhost.png')
+            self.image = load_image('graphics\\monster_redhost.png')
             self.hp = 10
         if self.name == 'boss1':
-            self.image = load_image('boss1.png')
+            self.image = load_image('graphics\\boss1.png')
             self.hp = 32
             self.size=80
             self.num = 1

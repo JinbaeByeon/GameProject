@@ -67,14 +67,14 @@ class Isaac:
         self.current = 0
 
         if Isaac.head == None:
-            Isaac.head_image = load_image('isaac.png')
+            Isaac.head_image = load_image('graphics\\isaac.png')
         if Isaac.body == None:
-            Isaac.body_image = load_image('isaac.png')
+            Isaac.body_image = load_image('graphics\\isaac.png')
 
-        self.laser_image = load_image('laser.png')
-        self.laser_swirling = load_image('laser_swirl.png')
-        self.laser_impact = load_image('laser_impact.png')
-        self.ui_image = load_image('ui_hearts.png')
+        self.laser_image = load_image('graphics\\laser.png')
+        self.laser_swirling = load_image('graphics\\laser_swirl.png')
+        self.laser_impact = load_image('graphics\\laser_impact.png')
+        self.ui_image = load_image('graphics\\ui_hearts.png')
 
     def update(self, frame_time):
         distance = Isaac.RUN_SPEED_PPS * frame_time

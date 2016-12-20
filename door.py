@@ -40,13 +40,13 @@ class Door:
             self.bottom = 350
 
         if self.type == 'bossroom':
-            self.image = load_image('bossroom_door.png')
+            self.image = load_image('graphics\\bossroom_door.png')
         if self.type == 'normal':
-            self.image = load_image('normal_door.png')
+            self.image = load_image('graphics\\normal_door.png')
         if self.type == 'treasure':
-            self.image = load_image('treasure_door.png')
+            self.image = load_image('graphics\\treasure_door.png')
         if self.type == 'trapdoor':
-            self.image = load_image('trap_door.png')
+            self.image = load_image('graphics\\trap_door.png')
 
     def draw(self):
         if self.type == 'normal':

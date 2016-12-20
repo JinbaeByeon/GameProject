@@ -4,13 +4,13 @@ class Item:
     def __init__(self, stage):
         self.x,self.y = 400,250
         self.on_Item = True
-        self.stone_image = load_image('itemstone.png')
+        self.stone_image = load_image('graphics\\itemstone.png')
         if stage ==0:
-            self.item_image = load_image('item_brimstone.png')
+            self.item_image = load_image('graphics\\item_brimstone.png')
         elif stage ==1:
-            self.item_image = load_image('item_brimstone.png')
+            self.item_image = load_image('graphics\\item_brimstone.png')
         elif stage ==2:
-            self.item_image = load_image('item_brimstone.png')
+            self.item_image = load_image('graphics\\item_brimstone.png')
 
     def draw(self):
         self.stone_image.draw(400, 250,40,40)

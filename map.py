@@ -18,9 +18,9 @@ class Map:
                             2 : [Monster('boss1','RIGHT_ROOM') for j in range(8)]}
 
 
-        self.map_image= {0:load_image('basement.png'),1:load_image('cellar.png'),2:load_image('basement.png')}
-        self.bg_image = load_image('bgblack.png')
-        self.shade_image=load_image('shading.png')
+        self.map_image= {0:load_image('graphics\\basement.png'),1:load_image('graphics\\cellar.png'),2:load_image('graphics\\basement.png')}
+        self.bg_image = load_image('graphics\\bgblack.png')
+        self.shade_image=load_image('graphics\\shading.png')
         self.left_door = Door('normal', 'LEFT')
         self.right_door =Door('bossroom','RIGHT')
         self.top_door =Door('treasure','TOP')
@@ -32,7 +32,11 @@ class Map:
         self.top_door.unlock()
         self.bottom_door.unlock()
 
-        self.ui_image =load_image('progress.png')
+        self.ui_image =load_image('graphics\\progress.png')
+
+        self.bgm=load_music('sounds\\bgm.mp3')
+        self.bgm.set_volume(64)
+        self.bgm.repeat_play()
 
     ui_x={'LEFT_ROOM':-32,
           'CENTER_ROOM':0,
