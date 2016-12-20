@@ -40,7 +40,7 @@ class Monster:
             self.image = load_image('graphics\\boss2.png')
             self.hp =15
             self.x = randint(100,700)
-            self.y = randint(100,500)
+            self.y = randint(100,400)
             self.speed =10
             self.dir_X = randint(-1,1)
             if self.dir_X == 0:

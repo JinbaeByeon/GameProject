@@ -11,6 +11,9 @@ class Map:
         self.left,self.bottom,self.right,self.top = 80,80,720,420
         self.state = 'CENTER_ROOM'
         self.inMonster = False
+        self.max_bossHP = {0:80,1:60,2:80}
+        self.current_bossHP = {0:80,1:60,2:80}
+
         self.monster_left =[Monster('clotty','LEFT_ROOM') for i in range(3)]
         self.monster_bottom = [Monster('redhost','BOTTOM_ROOM') for i in range(3)]
         self.monster_boss ={0 : [Monster('boss1','RIGHT_ROOM') for j in range(8)],
@@ -33,6 +36,7 @@ class Map:
         self.bottom_door.unlock()
 
         self.ui_image =load_image('graphics\\progress.png')
+        self.ui_bossHP = load_image('graphics\\ui_bosshp.png')
 
         self.bgm=load_music('sounds\\bgm.mp3')
         self.bgm.set_volume(64)
@@ -82,6 +86,9 @@ class Map:
         self.ui_image.clip_draw(0,160,32,32,100,550,50,50)
         self.ui_image.clip_draw(0,160,32,32,100,550,50,50)
         self.ui_image.clip_draw(32,128,32,32,100+self.ui_x[self.state],540+self.ui_y[self.state])
+        if self.state == 'RIGHT_ROOM' and self.inMonster == True:
+            self.ui_bossHP.clip_draw_to_origin(0,0,150,32,300,420,250,60)
+            self.ui_bossHP.clip_draw_to_origin(0,32,min(150,(int)(15+150*self.current_bossHP[self.stage]/self.max_bossHP[self.stage])),32,300,420,min(250,(int)(25+250*self.current_bossHP[self.stage]/self.max_bossHP[self.stage])),60)
 
     def get_bb(self):
         return self.left, self.bottom,self.right,self.top
