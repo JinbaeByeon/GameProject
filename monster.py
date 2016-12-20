@@ -14,7 +14,7 @@ class Monster:
         self.name = name
         self.room = room
         self.die = False
-        self.gauge = 2.0
+        self.gauge = 2
         self.sound_shot = load_wav('sounds\\tear_fire.wav')
 
         if self.name == 'clotty':
@@ -24,9 +24,19 @@ class Monster:
             self.dir_Y = -1
             self.speed = 10
             self.size = 50
-        if self.name == 'redhost':
-            self.image = load_image('graphics\\monster_redhost.png')
+        if self.name == 'worm':
+            self.image = load_image('graphics\\monster_chubberworm.png')
+            self.x = randint(100,700)
+            self.y = randint(100,400)
             self.hp = 10
+            self.speed = 10
+            self.dir_X = randint(-1,1)
+            if self.dir_X == 0:
+                self.dir_Y = 1
+            self.frame_X = 0
+            self.frame_Y = 0
+            self.size = 50
+
         if self.name == 'boss1':
             self.image = load_image('graphics\\boss1.png')
             self.hp = 32
@@ -48,6 +58,7 @@ class Monster:
             self.frame_X =0
             self.frame_Y =0
             self.size = 50
+            self.gauge = 3
 
     def update(self,frame_time):
         if self.name == 'clotty':
@@ -60,7 +71,9 @@ class Monster:
             self.gauge -= frame_time
             if self.gauge <= 0:
                 self.sound_shot.play()
-                self.gauge=2.0
+                self.gauge = randint(1,4)
+                if self.gauge == 1:
+                    self.gauge = 1.5
                 self.bullets[0].dir_X = -1
                 self.bullets[1].dir_X = 1
                 self.bullets[2].dir_Y = -1
@@ -74,7 +87,28 @@ class Monster:
             for bullet in self.bullets:
                 bullet.update(frame_time)
 
-        if self.name == 'redhost':
+        if self.name == 'worm':
+            self.x += self.dir_X*frame_time*10*self.speed
+            self.y += self.dir_Y*frame_time*10*self.speed
+
+            self.frame +=  frame_time*10
+            self.frame %= 2
+
+            self.gauge = max(0,self.gauge - frame_time)
+            for bullet in self.bullets:
+                bullet.update(frame_time)
+            if self.dir_X ==1:
+                self.frame_X = 2
+                self.frame_Y = 1
+            elif self.dir_X == -1:
+                self.frame_X = 2
+                self.frame_Y = 0
+            elif self.dir_Y == 1:
+                self.frame_X = 0
+                self.frame_Y = 0
+            elif self.dir_Y == -1:
+                self.frame_X = 0
+                self.frame_Y = 1
             pass
         if self.name =='boss1':
             self.x += self.dir_X*frame_time*10*self.speed
@@ -95,6 +129,28 @@ class Monster:
         if self.name == 'boss2':
             self.x += self.dir_X*frame_time*10*self.speed
             self.y += self.dir_Y*frame_time*10*self.speed
+
+            self.gauge = max(0, self.gauge - frame_time)
+            for bullet in self.bullets:
+                bullet.update(frame_time)
+            if self.gauge <= 0:
+                self.sound_shot.play()
+                self.gauge = randint(2,5)
+                self.bullets[0].dir_X = -1
+                self.bullets[0].dir_Y = 1
+
+                self.bullets[1].dir_X = -1
+                self.bullets[1].dir_Y = -1
+
+                self.bullets[2].dir_X = 1
+                self.bullets[2].dir_Y = -1
+
+                self.bullets[3].dir_X = 1
+                self.bullets[3].dir_Y = 1
+                for bullet in self.bullets:
+                    bullet.x=self.x
+                    bullet.y=self.y
+
             if self.dir_X ==1:
                 self.frame_X = 0
                 self.frame_Y = 0
@@ -115,8 +171,10 @@ class Monster:
                 self.image.clip_draw((int)(self.frame%4)*64,(2-floor(self.frame/4))*64,64,64,self.x,self.y,80,80)
                 for bullet in self.bullets:
                     bullet.draw()
-            if self.name == 'redhost':
-                self.image.clip_draw(0,0,32,64,self.x,self.y,50,100)
+            if self.name == 'worm':
+                self.image.clip_draw((self.frame_X+(int)(self.frame))*32,self.frame_Y*32,32,32,self.x,self.y,50,50)
+                for bullet in self.bullets:
+                    bullet.draw()
             if self.name == 'boss1':
                 if self.hp>16:
                     self.image.clip_draw(0,38,80,90,self.x,self.y)
@@ -133,13 +191,15 @@ class Monster:
                 else:
                     self.image.clip_draw(192,0,64,64,self.x-3,self.y+8)
                     self.image.clip_draw(64*self.frame_X,64*self.frame_Y,64,64,self.x+self.dir_X*10,self.y+self.dir_Y*10)
+                for bullet in self.bullets:
+                    bullet.draw()
 
 
     def get_bb(self):
         if self.name == 'clotty':
             return self.x-self.SIZE/2, self.y-self.SIZE/2,self.x+self.SIZE/2,self.y+self.SIZE/2
-        if self.name == 'redhost':
-            return self.x-self.SIZE/2, self.y-self.SIZE/2-30,self.x+self.SIZE/2,self.y+self.SIZE/2-30
+        if self.name == 'worm':
+            return self.x-20, self.y-20,self.x+20,self.y+20
 
         if self.name == 'boss1' or self.name == 'boss2':
             return self.x-self.size/2,self.y-self.size/2,self.x+self.size/2,self.y+self.size/2

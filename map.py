@@ -15,7 +15,10 @@ class Map:
         self.current_bossHP = {0:80,1:60,2:80}
 
         self.monster_left =[Monster('clotty','LEFT_ROOM') for i in range(3)]
-        self.monster_bottom = [Monster('redhost','BOTTOM_ROOM') for i in range(3)]
+        self.monster_bottom = {0:[Monster('worm','BOTTOM_ROOM') for i in range(4)],
+                               1: [Monster('worm', 'BOTTOM_ROOM') for i in range(4)],
+                               2: [Monster('worm', 'BOTTOM_ROOM') for i in range(4)]}
+
         self.monster_boss ={0 : [Monster('boss1','RIGHT_ROOM') for j in range(8)],
                             1 : [Monster('boss2','RIGHT_ROOM') for i in range(4)],
                             2 : [Monster('boss1','RIGHT_ROOM') for j in range(8)]}

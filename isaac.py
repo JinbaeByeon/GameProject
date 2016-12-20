@@ -62,6 +62,7 @@ class Isaac:
         self.laser_shot = False
         self.laser_dir = 0
         self.rad = 0
+        self.safe_time = 0
 
         self.bullets = [Bullet(2,'white') for i in range(8)]
         self.current = 0
@@ -84,6 +85,8 @@ class Isaac:
 
     def update(self, frame_time):
         distance = Isaac.RUN_SPEED_PPS * frame_time
+
+        self.safe_time = max(0,self.safe_time-frame_time)
 
         if self.head_state is not self.NOT_SHOT and self.laser == False:
             self.head_total_frames += 2*self.shot_speed * frame_time
@@ -222,18 +225,19 @@ class Isaac:
                     map.inMonster = False
                     map.update()
             if map.state == 'BOTTOM_ROOM':
-                if self.laser_dir == self.HEAD_LEFT and self.y-50 < map.monster_bottom[map.stage].y and map.monster_bottom[map.stage].y<self.y+50:
-                    map.monster_bottom[map.stage].hp -= frame_time*20
-                if self.laser_dir == self.HEAD_DOWN and self.x-50 < map.monster_bottom[map.stage].x and map.monster_bottom[map.stage].x<self.x+50:
-                    map.monster_bottom[map.stage].hp -= frame_time*20
-                if self.laser_dir == self.HEAD_RIGHT and self.y-50 < map.monster_bottom[map.stage].y and map.monster_bottom[map.stage].y<self.y+50:
-                    map.monster_bottom[map.stage].hp -= frame_time*20
-                if self.laser_dir == self.HEAD_UP and self.x-50 < map.monster_bottom[map.stage].x and map.monster_bottom[map.stage].x<self.x+50:
-                    map.monster_bottom[map.stage].hp -= frame_time*20
+                for monster in map.monster_bottom[map.stage]:
+                    if self.laser_dir == self.HEAD_LEFT and self.y-50 < monster.y and monster.y<self.y+50:
+                        monster.hp -= frame_time*20
+                    if self.laser_dir == self.HEAD_DOWN and self.x-50 < monster.x and monster.x<self.x+50:
+                        monster.hp -= frame_time*20
+                    if self.laser_dir == self.HEAD_RIGHT and self.y-50 < monster.y and monster.y<self.y+50:
+                        monster.hp -= frame_time*20
+                    if self.laser_dir == self.HEAD_UP and self.x-50 < monster.x and monster.x<self.x+50:
+                        monster.hp -= frame_time*20
 
-                if map.monster_bottom[map.stage].hp <=0:
-                    map.inMonster = False
-                    map.update()
+                    if monster.hp <=0:
+                        map.inMonster = False
+                        map.update()
             if map.state == 'RIGHT_ROOM':
                 #for boss in map.monster_boss[map.stage]:
                 #    if self.laser_dir == self.HEAD_LEFT and self.y-25 -boss.size < boss.y and boss.y<self.y+25+boss.size:
@@ -528,17 +532,77 @@ def update(frame_time):
 
     if map.state == 'LEFT_ROOM'and map.monster_left[map.stage].hp>0:
         map.monster_left[map.stage].update(frame_time)
-        for monster in map.monster_left:
-            for bullet in monster.bullets:
-                if not collide(bullet,map):
-                    if bullet.collision == False:
-                        bullet.play_sound()
-                    bullet.collision = True
-                if collide(bullet,player) and (bullet.dir_X !=0 or bullet.dir_Y !=0):
+        if collide(map.monster_left[map.stage],player) and player.safe_time==0:
+            player.hp -= 0.5
+            player.safe_time = 1
+        for bullet in map.monster_left[map.stage].bullets:
+            if not collide(bullet,map):
+                if bullet.collision == False:
+                    bullet.play_sound()
+                bullet.collision = True
+            if collide(bullet,player) and (bullet.dir_X !=0 or bullet.dir_Y !=0):
+                if player.safe_time==0:
                     player.hp -= 0.5
+                    player.safe_time = 1
+                if bullet.collision == False:
+                    bullet.play_sound()
+                bullet.collision = True
+        if collide(map.monster_left[map.stage], map):
+            if map.monster_left[map.stage].x - map.monster_left[map.stage].size / 2 < map.left:
+               map.monster_left[map.stage].dir_X = 1
+            if map.monster_left[map.stage].x + map.monster_left[map.stage].size / 2 > map.right:
+               map.monster_left[map.stage].dir_X = -1
+            if map.monster_left[map.stage].y - map.monster_left[map.stage].size / 2 < map.bottom:
+               map.monster_left[map.stage].dir_Y = 1
+            if map.monster_left[map.stage].y + map.monster_left[map.stage].size / 2 > map.top:
+               map.monster_left[map.stage].dir_Y = -1
+    elif map.state == 'BOTTOM_ROOM'and map.inMonster:
+        for monster in map.monster_bottom[map.stage]:
+            if math.fabs(player.x-monster.x)<20 and monster.gauge == 0:
+                monster.gauge = random.randint(1,4)
+                if player.y > monster.y:
+                    monster.bullets[0].dir_Y = 1
+                    monster.bullets[0].x= monster.x
+                    monster.bullets[0].y= monster.y
+                    monster.dir_X = 0
+                    monster.dir_Y = 1
+                else:
+                    monster.bullets[0].dir_Y = -1
+                    monster.bullets[0].x= monster.x
+                    monster.bullets[0].y= monster.y
+                    monster.dir_X = 0
+                    monster.dir_Y = -1
+
+            elif math.fabs(player.y-monster.y)<20 and monster.gauge == 0:
+                monster.gauge = random.randint(1,4)
+                if player.x > monster.x:
+                    monster.bullets[0].dir_X = 1
+                    monster.bullets[0].x= monster.x
+                    monster.bullets[0].y= monster.y
+                    monster.dir_X = 1
+                    monster.dir_Y = 0
+                else:
+                    monster.bullets[0].dir_X = -1
+                    monster.bullets[0].x= monster.x
+                    monster.bullets[0].y= monster.y
+                    monster.dir_X = -1
+                    monster.dir_Y = 0
+
+            for bullet in monster.bullets:
+                if not collide(bullet, map):
                     if bullet.collision == False:
                         bullet.play_sound()
                     bullet.collision = True
+                if collide(bullet, player) and (bullet.dir_X != 0 or bullet.dir_Y != 0):
+                    if player.safe_time == 0:
+                        player.hp -= 0.5
+                        player.safe_time = 1
+                    if bullet.collision == False:
+                        bullet.play_sound()
+                    bullet.collision = True
+            if collide(monster,player) and player.safe_time==0 and monster.hp > 0:
+                player.hp -= 0.5
+                player.safe_time = 1
             if collide(monster, map):
                 if monster.x - monster.size / 2 < map.left:
                    monster.dir_X = 1
@@ -548,11 +612,26 @@ def update(frame_time):
                    monster.dir_Y = 1
                 if monster.y + monster.size / 2 > map.top:
                    monster.dir_Y = -1
-    elif map.state == 'BOTTOM_ROOM':
-        map.monster_bottom[map.stage].update(frame_time)
-    elif map.state == 'RIGHT_ROOM':
+
+            monster.update(frame_time)
+    elif map.state == 'RIGHT_ROOM' and map.inMonster:
         for boss in map.monster_boss[map.stage]:
             boss.update(frame_time)
+            if collide(boss,player) and player.safe_time==0 and boss.hp > 0:
+                player.hp -= 1
+                player.safe_time = 1
+            for bullet in boss.bullets:
+                if not collide(bullet, map):
+                    if bullet.collision == False:
+                        bullet.play_sound()
+                    bullet.collision = True
+                if collide(bullet, player) and (bullet.dir_X != 0 or bullet.dir_Y != 0):
+                    if player.safe_time == 0:
+                        player.hp -= 0.5
+                        player.safe_time = 1
+                    if bullet.collision == False:
+                        bullet.play_sound()
+                    bullet.collision = True
 
     for bullet in player.bullets:
         bullet.update(frame_time)
@@ -574,15 +653,20 @@ def update(frame_time):
             if map.monster_left[map.stage].hp <=0:
                 map.inMonster = False
                 map.update()
-        elif collide(bullet,map.monster_bottom[map.stage]) and bullet.collision==False and map.state == 'BOTTOM_ROOM'and (bullet.dir_X !=0 or bullet.dir_Y !=0)and map.monster_bottom[map.stage].hp >0:
-            if bullet.collision == False:
-                bullet.play_sound()
-            bullet.collision = True
+        else:
+            if map.state == 'BOTTOM_ROOM' and map.inMonster:
+                for monster in map.monster_bottom[map.stage]:
+                    if collide(bullet,monster) and bullet.collision==False and (bullet.dir_X !=0 or bullet.dir_Y !=0)and monster.hp > 0:
+                        if bullet.collision == False:
+                            bullet.play_sound()
 
-            map.monster_bottom[map.stage].hp -=player.power
-            if map.monster_bottom[map.stage].hp <=0:
-                map.inMonster = False
-                map.update()
+                        monster.hp -=player.power
+
+                        bullet.collision = True
+
+                if map.monster_bottom[map.stage][0].hp <= 0 and map.monster_bottom[map.stage][1].hp <= 0 and map.monster_bottom[map.stage][2].hp <= 0 and map.monster_bottom[map.stage][3].hp <= 0:
+                    map.inMonster=False
+                    map.update()
 
         # 보스1 충돌알고리즘
         if map.state == 'RIGHT_ROOM' and map.stage == 0:
@@ -691,10 +775,10 @@ def update(frame_time):
             player.x = map.right-50
             if map.monster_left[map.stage].hp>0:
                 map.inMonster=True
-            map.update()
+                map.update()
             for bullet in player.bullets:
                 bullet.reset()
-        if collide(player, map.right_door) and map.right_door.lock==map.right_door.OPEN:
+        elif collide(player, map.right_door) and map.right_door.lock==map.right_door.OPEN:
             map.sound_door.play()
             map.state = 'RIGHT_ROOM'
             player.x = map.left+50
@@ -706,16 +790,18 @@ def update(frame_time):
             map.update()
             for bullet in player.bullets:
                 bullet.reset()
-        if collide(player, map.bottom_door) and map.bottom_door.lock==map.bottom_door.OPEN:
+        elif collide(player, map.bottom_door) and map.bottom_door.lock==map.bottom_door.OPEN:
             map.sound_door.play()
             map.state = 'BOTTOM_ROOM'
             player.y= map.top-50
-            if map.monster_bottom[map.stage].hp>0:
-                map.inMonster=True
+            map.inMonster=False
+            for monster in map.monster_bottom[map.stage]:
+                if monster.hp>0:
+                    map.inMonster=True
             map.update()
             for bullet in player.bullets:
                 bullet.reset()
-        if collide(player, map.top_door) and map.top_door.lock==map.top_door.OPEN:
+        elif collide(player, map.top_door) and map.top_door.lock==map.top_door.OPEN:
             map.sound_door.play()
             map.state = 'TOP_ROOM'
             player.y= map.bottom+50
@@ -731,7 +817,7 @@ def update(frame_time):
             map.update()
             for bullet in player.bullets:
                 bullet.reset()
-    if map.state == 'RIGHT_ROOM' and map.left_door.lock==map.left_door.OPEN:
+    elif map.state == 'RIGHT_ROOM' and map.left_door.lock==map.left_door.OPEN:
         if collide(player, map.left_door):
             map.sound_door.play()
             map.state = 'CENTER_ROOM'
@@ -750,7 +836,7 @@ def update(frame_time):
             for bullet in player.bullets:
                 bullet.reset()
 
-    if map.state == 'TOP_ROOM' and map.bottom_door.lock==map.bottom_door.OPEN:
+    elif map.state == 'TOP_ROOM' and map.bottom_door.lock==map.bottom_door.OPEN:
         if collide(player, map.bottom_door):
             map.sound_door.play()
             map.state = 'CENTER_ROOM'
@@ -758,7 +844,7 @@ def update(frame_time):
             map.update()
             for bullet in player.bullets:
                 bullet.reset()
-    if map.state == 'BOTTOM_ROOM' and map.top_door.lock==map.top_door.OPEN:
+    elif map.state == 'BOTTOM_ROOM' and map.top_door.lock==map.top_door.OPEN:
         if collide(player, map.top_door):
             map.sound_door.play()
             map.state = 'CENTER_ROOM'
@@ -797,11 +883,12 @@ def draw(frame_time):
         bullet.draw()
     if map.state == 'TOP_ROOM':
         items[map.stage].draw()
-    if map.state == map.monster_left[map.stage].room:
+    elif map.state == map.monster_left[map.stage].room:
         map.monster_left[map.stage].draw()
-    if map.state == map.monster_bottom[map.stage].room:
-        map.monster_bottom[map.stage].draw()
-    if map.state == 'RIGHT_ROOM':
+    elif map.state == 'BOTTOM_ROOM':
+        for monster in map.monster_bottom[map.stage]:
+            monster.draw()
+    elif map.state == 'RIGHT_ROOM':
         for boss in map.monster_boss[map.stage]:
             boss.draw()
     player.draw()
@@ -809,15 +896,16 @@ def draw(frame_time):
     player.draw_bb()
     for bullet in player.bullets:
         bullet.draw_bb()
-    if map.state == 'TOP_ROOM':
-        items[map.stage].draw_bb()
     map.draw_bb()
     map.draw_door_bb()
-    if map.state == map.monster_left[map.stage].room:
+    if map.state == 'TOP_ROOM':
+        items[map.stage].draw_bb()
+    elif map.state == map.monster_left[map.stage].room:
         map.monster_left[map.stage].draw_bb()
-    if map.state == map.monster_bottom[map.stage].room:
-        map.monster_bottom[map.stage].draw_bb()
-    if map.state == 'RIGHT_ROOM':
+    elif map.state == 'BOTTOM_ROOM':
+        for monster in map.monster_bottom[map.stage]:
+            monster.draw_bb()
+    elif map.state == 'RIGHT_ROOM':
         for boss in map.monster_boss[map.stage]:
             boss.draw_bb()
 
