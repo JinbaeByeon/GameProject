@@ -10,8 +10,8 @@ bgm = None
 
 def enter():
     global image,bgm
-    open_canvas()
     image = load_image('graphics\\titlemenu.png')
+
     bgm = load_music('sounds\\title_bgm.mp3')
     bgm.set_volume(64)
     bgm.repeat_play()
@@ -41,7 +41,7 @@ def draw(frame_time):
     update_canvas()
 
 def handle_events(frame_time):
-    global bgm
+    global bgm,image
     events = get_events()
     for event in events:
         if event.type == SDL_QUIT:
@@ -49,7 +49,10 @@ def handle_events(frame_time):
         else:
             if (event.type, event.key) == (SDL_KEYDOWN, SDLK_SPACE):
                 del(bgm)
+                del(image)
                 game_framework.push_state(isaac)
+            if (event.type, event.key) == (SDL_KEYDOWN,SDLK_ESCAPE):
+                game_framework.quit()
 
 
 def pause(): pass

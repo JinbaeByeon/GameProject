@@ -36,7 +36,13 @@ class Map:
 
         self.bgm=load_music('sounds\\bgm.mp3')
         self.bgm.set_volume(64)
-        self.bgm.repeat_play()
+
+        self.bgm_bossroom = {0:load_music('sounds\\bossroom1.mp3'),1:load_music('sounds\\bossroom2.ogg'),2:load_music('sounds\\bossroom3.mp3')}
+        self.bgm_bossroom[self.stage].set_volume(30)
+        self.state_bgm = None
+
+        self.sound_door = load_wav('sounds\\unlock.wav')
+        self.sound_door.set_volume(30)
 
     ui_x={'LEFT_ROOM':-32,
           'CENTER_ROOM':0,
@@ -50,11 +56,23 @@ class Map:
             'BOTTOM_ROOM': -20,
             'RIGHT_ROOM': 0}
 
+    def play_bgm(self):
+        if self.state_bgm != 'normal':
+            self.state_bgm = 'normal'
+            self.bgm.repeat_play()
+
+    def play_bgm_boss(self):
+        if self.state_bgm != 'bossroom':
+            self.state_bgm = 'bossroom'
+            self.bgm.pause()
+            self.bgm_bossroom[self.stage].repeat_play()
+
     def draw(self):
         self.bg_image.draw(400,300,800,600)
 #        self.ui_image.clip_draw(0,160,32,32,100,590,300,600)
         self.map_image[self.stage].draw(400,250,800,500)
         self.shade_image.draw(400,250,800,500)
+
         self.ui_image.clip_draw(0,160,32,32,68,550,50,50)
         self.ui_image.clip_draw(0,160,32,32,132,550,50,50)
         self.ui_image.clip_draw(64,128,32,32,132,540)

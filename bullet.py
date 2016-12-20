@@ -34,6 +34,12 @@ class Bullet:
         if Bullet.effect == None:
             Bullet.effect = load_image('graphics\\tears_effect.png')
 
+        self.sound_effect = load_wav('sounds\\tear_block.wav')
+        self.sound_effect.set_volume(20)
+
+    def play_sound(self):
+        self.sound_effect.play()
+
     def reset(self):
         self.x, self.y = 400,300
         self.dir_X = 0
@@ -50,6 +56,8 @@ class Bullet:
         if(self.dir_X  != 0 or self.dir_Y != 0):
             self.time += frame_time
         if self.time >= 1 or self.collision:
+            if not self.isEffect:
+                self.play_sound()
             self.isEffect = True
             self.dir_X = 0
             self.dir_Y = 0

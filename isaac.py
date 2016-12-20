@@ -76,6 +76,12 @@ class Isaac:
         self.laser_impact = load_image('graphics\\laser_impact.png')
         self.ui_image = load_image('graphics\\ui_hearts.png')
 
+        self.sound_tearShot = load_wav('sounds\\tear_fire.wav')
+        self.sound_tearShot.set_volume(40)
+
+        self.sound_laser = load_wav('sounds\\laser.wav')
+        self.sound_laser.set_volume(20)
+
     def update(self, frame_time):
         distance = Isaac.RUN_SPEED_PPS * frame_time
 
@@ -92,6 +98,7 @@ class Isaac:
             self.head_frame += int(self.head_total_frames) % 2
 
             if self.head_frame%2 == 1 and self.shot_Enable:
+                self.sound_tearShot.play()
                 self.bullets[self.current].x=self.x
                 self.bullets[self.current].y=self.y
 
@@ -134,6 +141,7 @@ class Isaac:
             if self.laser_enable == False:
                 self.gauge = 0
             else:
+                self.sound_laser.play()
                 self.laser_shot =True
         if(self.laser_shot):
             self.rad += math.pi/70
@@ -359,6 +367,7 @@ class Isaac:
 
                 if map.inMonster == False:
                     map.update()
+
     def draw(self):
         if self.laser_shot and self.laser_dir == self.HEAD_UP:
             self.laser_image.clip_draw_to_origin(0,0,112,256,self.x-25,self.y+10,50,map.top-self.y)
@@ -404,6 +413,8 @@ def enter():
 
     player =Isaac()
     map = Map()
+    map.play_bgm()
+
     items = [Item(i) for i in range(3)]
 
 def exit():
@@ -412,6 +423,7 @@ def exit():
     del(player)
     del(map)
     del(items)
+    close_canvas()
 
 def pause():
     pass
@@ -441,7 +453,7 @@ def handle_events(frame_time):
             game_framework.quit()
         else:
             if (event.type, event.key) == (SDL_KEYDOWN, SDLK_ESCAPE):
-                game_framework.change_state(start_state)
+                game_framework.push_state(start_state)
             if event.type == SDL_KEYDOWN:
                 if event.key ==SDLK_1:
                     player.power =20
@@ -507,6 +519,7 @@ def handle_events(frame_time):
 def update(frame_time):
     global player, map
     player.update(frame_time)
+
     if map.state == 'LEFT_ROOM':
         map.monster_left[map.stage].update(frame_time)
     elif map.state == 'BOTTOM_ROOM':
@@ -518,17 +531,28 @@ def update(frame_time):
     for bullet in player.bullets:
         bullet.update(frame_time)
         if not collide(bullet,map):
+            if bullet.collision == False:
+                bullet.play_sound()
             bullet.collision = True
+
         elif collide(bullet,items[map.stage]) and map.state == 'TOP_ROOM':
+            if bullet.collision == False:
+                bullet.play_sound()
             bullet.collision = True
+
         elif collide(bullet,map.monster_left[map.stage]) and bullet.collision==False and map.state == 'LEFT_ROOM'and (bullet.dir_X !=0 or bullet.dir_Y !=0) and map.monster_left[map.stage].hp >0:
+            if bullet.collision == False:
+                bullet.play_sound()
             bullet.collision = True
             map.monster_left[map.stage].hp -=player.power
             if map.monster_left[map.stage].hp <=0:
                 map.inMonster = False
                 map.update()
         elif collide(bullet,map.monster_bottom[map.stage]) and bullet.collision==False and map.state == 'BOTTOM_ROOM'and (bullet.dir_X !=0 or bullet.dir_Y !=0)and map.monster_bottom[map.stage].hp >0:
+            if bullet.collision == False:
+                bullet.play_sound()
             bullet.collision = True
+
             map.monster_bottom[map.stage].hp -=player.power
             if map.monster_bottom[map.stage].hp <=0:
                 map.inMonster = False
@@ -621,6 +645,7 @@ def update(frame_time):
 
     if map.state == 'CENTER_ROOM':
         if collide(player, map.left_door) and map.left_door.lock==map.left_door.OPEN:
+            map.sound_door.play()
             map.state = 'LEFT_ROOM'
             player.x = map.right-50
             if map.monster_left[map.stage].hp>0:
@@ -629,16 +654,19 @@ def update(frame_time):
             for bullet in player.bullets:
                 bullet.reset()
         if collide(player, map.right_door) and map.right_door.lock==map.right_door.OPEN:
+            map.sound_door.play()
             map.state = 'RIGHT_ROOM'
             player.x = map.left+50
             map.inMonster=False
             for boss in map.monster_boss[map.stage]:
                 if boss.hp>0:
+                    map.play_bgm_boss()
                     map.inMonster=True
             map.update()
             for bullet in player.bullets:
                 bullet.reset()
         if collide(player, map.bottom_door) and map.bottom_door.lock==map.bottom_door.OPEN:
+            map.sound_door.play()
             map.state = 'BOTTOM_ROOM'
             player.y= map.top-50
             if map.monster_bottom[map.stage].hp>0:
@@ -647,6 +675,7 @@ def update(frame_time):
             for bullet in player.bullets:
                 bullet.reset()
         if collide(player, map.top_door) and map.top_door.lock==map.top_door.OPEN:
+            map.sound_door.play()
             map.state = 'TOP_ROOM'
             player.y= map.bottom+50
             map.update()
@@ -655,6 +684,7 @@ def update(frame_time):
 
     if map.state == 'LEFT_ROOM' and map.right_door.lock==map.right_door.OPEN:
         if collide(player, map.right_door):
+            map.sound_door.play()
             map.state = 'CENTER_ROOM'
             player.x = map.left+50
             map.update()
@@ -662,14 +692,17 @@ def update(frame_time):
                 bullet.reset()
     if map.state == 'RIGHT_ROOM' and map.left_door.lock==map.left_door.OPEN:
         if collide(player, map.left_door):
+            map.sound_door.play()
             map.state = 'CENTER_ROOM'
+            map.play_bgm()
             player.x = map.right-50
             map.update()
             for bullet in player.bullets:
                 bullet.reset()
         if collide(player,map.trap_door):
             map.stage +=1
-
+            map.play_bgm()
+            map.sound_door.play()
             map.state = 'CENTER_ROOM'
             player.x,player.y= 400,250
             map.update()
@@ -678,6 +711,7 @@ def update(frame_time):
 
     if map.state == 'TOP_ROOM' and map.bottom_door.lock==map.bottom_door.OPEN:
         if collide(player, map.bottom_door):
+            map.sound_door.play()
             map.state = 'CENTER_ROOM'
             player.y= map.top-50
             map.update()
@@ -685,6 +719,7 @@ def update(frame_time):
                 bullet.reset()
     if map.state == 'BOTTOM_ROOM' and map.top_door.lock==map.top_door.OPEN:
         if collide(player, map.top_door):
+            map.sound_door.play()
             map.state = 'CENTER_ROOM'
             player.y= map.bottom+50
             map.update()
