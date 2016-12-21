@@ -11,8 +11,8 @@ class Map:
         self.left,self.bottom,self.right,self.top = 80,80,720,420
         self.state = 'CENTER_ROOM'
         self.inMonster = False
-        self.max_bossHP = {0:80,1:60,2:80}
-        self.current_bossHP = {0:80,1:60,2:80}
+        self.max_bossHP = {0:80,1:16,2:80}
+        self.current_bossHP = {0:80,1:16,2:80}
 
         self.monster_left =[Monster('clotty','LEFT_ROOM') for i in range(3)]
         self.monster_bottom = {0:[Monster('worm','BOTTOM_ROOM') for i in range(4)],
@@ -21,7 +21,7 @@ class Map:
 
         self.monster_boss ={0 : [Monster('boss1','RIGHT_ROOM') for j in range(8)],
                             1 : [Monster('boss2','RIGHT_ROOM') for i in range(4)],
-                            2 : [Monster('boss1','RIGHT_ROOM') for j in range(8)]}
+                            2 : [Monster('boss3','RIGHT_ROOM')for j in range(8)]}
 
 
         self.map_image= {0:load_image('graphics\\basement.png'),1:load_image('graphics\\cellar.png'),2:load_image('graphics\\basement.png')}

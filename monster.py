@@ -15,7 +15,8 @@ class Monster:
         self.room = room
         self.die = False
         self.gauge = 2
-        self.sound_shot = load_wav('sounds\\tear_fire.wav')
+        self.sound_shot = load_wav('sounds\\monster_shot.wav')
+        self.sound_shot.set_volume(20)
 
         if self.name == 'clotty':
             self.image = load_image('graphics\\monster_clotty.png')
@@ -37,7 +38,7 @@ class Monster:
             self.frame_Y = 0
             self.size = 50
 
-        if self.name == 'boss1':
+        if self.name == 'boss1' or self.name == 'boss3':
             self.image = load_image('graphics\\boss1.png')
             self.hp = 32
             self.size=80
@@ -48,7 +49,7 @@ class Monster:
             self.split = False
         if self.name == 'boss2':
             self.image = load_image('graphics\\boss2.png')
-            self.hp =15
+            self.hp =4
             self.x = randint(100,700)
             self.y = randint(100,400)
             self.speed =10
@@ -59,6 +60,7 @@ class Monster:
             self.frame_Y =0
             self.size = 50
             self.gauge = 3
+
 
     def update(self,frame_time):
         if self.name == 'clotty':
@@ -110,7 +112,8 @@ class Monster:
                 self.frame_X = 0
                 self.frame_Y = 1
             pass
-        if self.name =='boss1':
+
+        if self.name =='boss1' or self.name == 'boss3':
             self.x += self.dir_X*frame_time*10*self.speed
             self.y += self.dir_Y*frame_time*10*self.speed
 
@@ -126,6 +129,28 @@ class Monster:
             else:
                 self.size = 30
                 self.speed = 20
+            if self.name == 'boss3':
+                self.gauge = max(0, self.gauge - frame_time)
+                for bullet in self.bullets:
+                    bullet.update(frame_time)
+                if self.gauge <= 0:
+                    self.sound_shot.play()
+                    self.gauge = 5
+                    self.bullets[0].dir_X = -1
+                    self.bullets[0].dir_Y = 1
+
+                    self.bullets[1].dir_X = -1
+                    self.bullets[1].dir_Y = -1
+
+                    self.bullets[2].dir_X = 1
+                    self.bullets[2].dir_Y = -1
+
+                    self.bullets[3].dir_X = 1
+                    self.bullets[3].dir_Y = 1
+                    for bullet in self.bullets:
+                        bullet.x = self.x
+                        bullet.y = self.y
+
         if self.name == 'boss2':
             self.x += self.dir_X*frame_time*10*self.speed
             self.y += self.dir_Y*frame_time*10*self.speed
@@ -135,7 +160,7 @@ class Monster:
                 bullet.update(frame_time)
             if self.gauge <= 0:
                 self.sound_shot.play()
-                self.gauge = randint(2,5)
+                self.gauge = 5
                 self.bullets[0].dir_X = -1
                 self.bullets[0].dir_Y = 1
 
@@ -175,7 +200,7 @@ class Monster:
                 self.image.clip_draw((self.frame_X+(int)(self.frame))*32,self.frame_Y*32,32,32,self.x,self.y,50,50)
                 for bullet in self.bullets:
                     bullet.draw()
-            if self.name == 'boss1':
+            if self.name == 'boss1' or self.name == 'boss3':
                 if self.hp>16:
                     self.image.clip_draw(0,38,80,90,self.x,self.y)
                 elif self.hp>8:
@@ -184,6 +209,10 @@ class Monster:
                     self.image.clip_draw(160,64 ,60,64,self.x,self.y)
                 else:
                     self.image.clip_draw(100,0,60,64,self.x,self.y)
+                if self.name == 'boss3':
+                    for bullet in self.bullets:
+                        bullet.draw()
+
             if self.name == 'boss2':
                 if self.dir_Y ==1:
                     self.image.clip_draw(64*self.frame_X,64*self.frame_Y,64,64,self.x+self.dir_X*10,self.y+self.dir_Y*10)
@@ -201,7 +230,7 @@ class Monster:
         if self.name == 'worm':
             return self.x-20, self.y-20,self.x+20,self.y+20
 
-        if self.name == 'boss1' or self.name == 'boss2':
+        if self.name == 'boss1' or self.name == 'boss2' or self.name == 'boss3':
             return self.x-self.size/2,self.y-self.size/2,self.x+self.size/2,self.y+self.size/2
 
     def draw_bb(self):
