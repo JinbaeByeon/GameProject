@@ -361,8 +361,8 @@ class Isaac:
                                     map.monster_boss[map.stage][1].dir_X = -map.monster_boss[map.stage][1].dir_X
                                     map.monster_boss[map.stage][1].dir_Y = -map.monster_boss[map.stage][1].dir_Y
 
-                    if map.monster_boss[map.stage][i].hp > 0:
-                        map.inMonster = True
+                        if map.monster_boss[map.stage][i].hp > 0:
+                            map.inMonster = True
 
                     if map.inMonster == False:
                         map.update()
@@ -859,6 +859,7 @@ def update(frame_time):
                 game_framework.push_state(start_state)
             else:
                map.stage +=1
+               player.hp = min(3,player.hp + 1)
                map.play_bgm()
                map.sound_door.play()
                map.state = 'CENTER_ROOM'
